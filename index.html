@@ -21,12 +21,12 @@
 var SB="https://jzrxawfuaduzvzcgnkez.supabase.co";
 var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6cnhhd2Z1YWR1enZ6Y2dua2V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjIzMjQsImV4cCI6MjA5MDg5ODMyNH0.IpxbqaS3Uj64M5s2VToTxSdZGrGIAbhIrssy-mmRk6o";
 fetch(SB+"/rest/v1/static_files?slug=eq.panel-app&select=content",{
-  headers:{"apikey":KEY,"Authorization":"Bearer "+KEY}
+  headers:{"apikey":KEY,"Authorization":"Bearer "+KEY,"Accept-Profile":"panel"}
 })
 .then(function(r){return r.json()})
 .then(function(d){
   if(d&&d[0]&&d[0].content){document.open();document.write(d[0].content);document.close()}
-  else{document.getElementById("loader").innerHTML='<div class="error">Panel niet gevonden.</div>'}
+  else{document.getElementById("loader").innerHTML='<div class="error">Panel niet gevonden. Debug: '+JSON.stringify(d).substring(0,200)+'</div>'}
 })
 .catch(function(e){
   document.getElementById("loader").innerHTML='<div class="error">Fout: '+e.message+'</div>'
