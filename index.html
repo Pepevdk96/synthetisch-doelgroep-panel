@@ -4,33 +4,711 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Synthetisch Doelgroep Panel — Tonny Media</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 <style>
-  body{font-family:-apple-system,sans-serif;background:#f5f5f7;display:flex;align-items:center;justify-content:center;min-height:100vh}
-  .loader{text-align:center}
-  .spinner{width:40px;height:40px;border:4px solid #e8e8e8;border-top-color:#E8A830;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .error{color:#e74c3c;background:#ffeaea;padding:16px;border-radius:8px;max-width:400px}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f7; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
 </style>
 </head>
 <body>
-<div class="loader" id="loader">
-  <div class="spinner"></div>
-  <p style="color:#888;font-size:14px">Panel laden...</p>
-</div>
-<script>
-var SB="https://jzrxawfuaduzvzcgnkez.supabase.co";
-var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6cnhhd2Z1YWR1enZ6Y2dua2V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjIzMjQsImV4cCI6MjA5MDg5ODMyNH0.IpxbqaS3Uj64M5s2VToTxSdZGrGIAbhIrssy-mmRk6o";
-fetch(SB+"/rest/v1/static_files?slug=eq.panel-app&select=content",{
-  headers:{"apikey":KEY,"Authorization":"Bearer "+KEY,"Accept-Profile":"panel"}
-})
-.then(function(r){return r.json()})
-.then(function(d){
-  if(d&&d[0]&&d[0].content){document.open();document.write(d[0].content);document.close()}
-  else{document.getElementById("loader").innerHTML='<div class="error">Panel niet gevonden. Debug: '+JSON.stringify(d).substring(0,200)+'</div>'}
-})
-.catch(function(e){
-  document.getElementById("loader").innerHTML='<div class="error">Fout: '+e.message+'</div>'
-});
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+// ============================================
+// SYNTHETISCH DOELGROEP PANEL — Full App
+// ============================================
+
+const SUPABASE_URL = "https://jzrxawfuaduzvzcgnkez.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6cnhhd2Z1YWR1enZ6Y2dua2V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMjIzMjQsImV4cCI6MjA5MDg5ODMyNH0.IpxbqaS3Uj64M5s2VToTxSdZGrGIAbhIrssy-mmRk6o";
+
+const BRANDS = {
+  tonny: { name: "Tonny", color: "#E8A830", emoji: "\ud83e\udd5c" },
+  podimo: { name: "Podimo", color: "#FF6B4A", emoji: "\ud83c\udfa7" },
+  dagnacht: { name: "Dag & Nacht", color: "#9B59B6", emoji: "\ud83c\udf19" },
+};
+
+// Embedded personas as fallback (when REST API fails due to CORS/file://)
+const FALLBACK_PERSONAS = [
+  { id: "30a34307-fac9-4a77-bb42-8898db61308b", name: "Daan Bakker", brand: "tonny", age: 31, avatar: "\ud83d\udc68\u200d\ud83d\udcbc", occupation: "Account manager", is_active: true },
+  { id: "94cf8f03-4570-4ac1-8991-cdb8ce5c3619", name: "Sophie van Dijk", brand: "tonny", age: 24, avatar: "\ud83d\udc69\u200d\ud83e\uddb0", occupation: "Social media manager", is_active: true },
+  { id: "e6f3be8f-cdca-4a7a-a4db-b18b43b746ca", name: "Yasmine El Ouardi", brand: "tonny", age: 19, avatar: "\ud83d\udc69\u200d\ud83c\udf93", occupation: "Student Psychologie", is_active: true },
+  { id: "ebb8be2c-ef90-4104-adcb-e9b14f3842d4", name: "Martijn de Vries", brand: "podimo", age: 38, avatar: "\ud83e\uddd4", occupation: "Beleidsadviseur", is_active: true },
+  { id: "b86a7818-2dcd-47dc-a07c-177d97b09504", name: "Linda Jansen", brand: "podimo", age: 45, avatar: "\ud83d\udc69\u200d\ud83d\udcbb", occupation: "HR-directeur", is_active: true },
+  { id: "68d14288-52cb-4b5b-92ea-b82acd91e41d", name: "Thomas Hendriks", brand: "podimo", age: 28, avatar: "\ud83d\udc68\u200d\ud83c\udfa4", occupation: "UX Designer", is_active: true },
+  { id: "620026d8-253c-41aa-a351-c25366bb418c", name: "Fleur Visser", brand: "dagnacht", age: 22, avatar: "\ud83d\udc83", occupation: "Influencer", is_active: true },
+  { id: "debce9d3-feed-4fb8-a3ae-e8273fb2e6a8", name: "Rick van den Berg", brand: "dagnacht", age: 26, avatar: "\ud83e\uddd1\u200d\ud83c\udf73", occupation: "Horeca-ondernemer", is_active: true },
+  { id: "882e7945-0b79-4f05-8957-783aeda50f29", name: "Noor de Groot", brand: "dagnacht", age: 30, avatar: "\ud83d\udc69\u200d\u2695\ufe0f", occupation: "Huisarts in opleiding", is_active: true },
+];
+
+// API helpers
+async function callEdgeFunction(name, body) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+async function transcribeAudio(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/panel-transcribe`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${SUPABASE_ANON_KEY}` },
+    body: formData,
+  });
+  return res.json();
+}
+
+async function transcribeOmnyUrl(url) {
+  return callEdgeFunction("panel-transcribe", { audio_url: url });
+}
+
+async function fetchFrameIO(urlOrId) {
+  // Try as URL first, then as asset ID
+  const body = urlOrId.includes("/") ? { url: urlOrId } : { asset_id: urlOrId };
+  return callEdgeFunction("panel-frameio", body);
+}
+
+// ============================================
+// Components
+// ============================================
+
+function Pipeline({ step }) {
+  const steps = [
+    { icon: "\ud83d\udcdd", label: "Input" },
+    { icon: "\ud83c\udfa4", label: "Transcriptie" },
+    { icon: "\ud83e\udde0", label: "Analyse" },
+    { icon: "\ud83d\udcac", label: "Chat" },
+  ];
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 0, background: "#fff", borderRadius: 14, padding: "12px 20px", marginBottom: 16 }}>
+      {steps.map((s, i) => (
+        <div key={i} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+          <div style={{ textAlign: "center", flex: 1 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: "50%", margin: "0 auto 3px",
+              background: step >= i ? "#E8A830" : "#f0f0f0",
+              color: step >= i ? "#fff" : "#bbb",
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
+              transition: "all .4s",
+            }}>{s.icon}</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: step >= i ? "#1a1045" : "#bbb" }}>{s.label}</div>
+          </div>
+          {i < steps.length - 1 && <div style={{ width: 30, height: 2, background: step > i ? "#E8A830" : "#e8e8e8" }} />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PersonaGrid({ personas, selected, onToggle }) {
+  return (
+    <div style={{ background: "#fff", borderRadius: 14, padding: 14, marginBottom: 12 }}>
+      <h4 style={{ margin: "0 0 8px", fontSize: 13 }}>Panel ({selected.length}/{personas.length})</h4>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4 }}>
+        {personas.map(p => {
+          const b = BRANDS[p.brand] || { color: "#999", emoji: "" };
+          const sel = selected.includes(p.id);
+          return (
+            <button key={p.id} onClick={() => onToggle(p.id)} style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+              padding: "6px 2px", borderRadius: 8,
+              border: sel ? `2px solid ${b.color}` : "2px solid transparent",
+              background: sel ? `${b.color}10` : "#f8f9fa",
+              cursor: "pointer", transition: "all .15s",
+            }}>
+              <span style={{ fontSize: 18 }}>{p.avatar}</span>
+              <span style={{ fontSize: 9, fontWeight: 600, color: "#333" }}>{p.name?.split(" ")[0]}</span>
+              <span style={{ fontSize: 7, color: b.color, fontWeight: 700 }}>{b.emoji} {b.name}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function parseTranscriptFile(text, filename) {
+  // Strip SRT/VTT timestamps and metadata, return clean text
+  const ext = filename?.split('.').pop()?.toLowerCase();
+  let lines = text.split('\n');
+  let clean = [];
+  if (ext === 'vtt' || text.trimStart().startsWith('WEBVTT')) {
+    // Skip WEBVTT header and NOTE blocks
+    let inNote = false;
+    for (let line of lines) {
+      if (line.trim() === 'WEBVTT') continue;
+      if (line.trim().startsWith('NOTE')) { inNote = true; continue; }
+      if (inNote && line.trim() === '') { inNote = false; continue; }
+      if (inNote) continue;
+      // Skip timestamp lines
+      if (/^\d{2}:\d{2}/.test(line.trim()) && line.includes('-->')) continue;
+      // Skip empty lines and sequence numbers
+      if (line.trim() === '' || /^\d+$/.test(line.trim())) continue;
+      clean.push(line.trim());
+    }
+  } else {
+    // SRT format
+    for (let line of lines) {
+      if (/^\d+$/.test(line.trim())) continue;
+      if (/^\d{2}:\d{2}/.test(line.trim()) && line.includes('-->')) continue;
+      if (line.trim() === '') continue;
+      clean.push(line.trim());
+    }
+  }
+  return clean.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function BriefingForm({ briefing, onChange, onSubmit, inputType, setInputType, audioFile, setAudioFile, omnyUrl, setOmnyUrl, transcriptFile, setTranscriptFile, transcriptText, setTranscriptText, isLoading }) {
+  const fields = [
+    { key: "title", label: "Titel", type: "text", placeholder: "Naam van het concept..." },
+    { key: "format_oneliner", label: "Format in \u00e9\u00e9n zin", type: "text", placeholder: "Korte omschrijving..." },
+    { key: "synopsis", label: "Synopsis", type: "textarea", placeholder: "Uitgebreide beschrijving..." },
+    { key: "makers", label: "Makers / Hosts", type: "text", placeholder: "Wie en waarom?" },
+    { key: "format_hook", label: "Format haak", type: "textarea", placeholder: "Wat maakt dit uniek? Wat gebeurt elke aflevering?" },
+    { key: "why_works", label: "Waarom werkt dit?", type: "textarea", placeholder: "Toegevoegde waarde en unique selling point..." },
+    { key: "target_brand", label: "Doelmerk", type: "select", options: ["", "Tonny Media", "Podimo", "Dag & Nacht", "Meerdere"] },
+    { key: "references", label: "Referenties", type: "text", placeholder: "Vergelijkbare formats..." },
+    { key: "doc_url", label: "Bijlage (link)", type: "url", placeholder: "Link naar Google Doc, Slides, of andere bijlage..." },
+  ];
+
+  return (
+    <div style={{ background: "#fff", borderRadius: 14, padding: 16 }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 14 }}>
+        {[
+          { id: "concept", icon: "\ud83d\udcdd", label: "Concept" },
+          { id: "transcript", icon: "\ud83d\udcc4", label: "Transcriptie" },
+          { id: "frameio", icon: "\ud83c\udfac", label: "Frame.io" },
+          { id: "audio", icon: "\ud83c\udfa4", label: "Audio" },
+        ].map(t => (
+          <button key={t.id} onClick={() => setInputType(t.id)} style={{
+            flex: 1, padding: "7px", borderRadius: 8, border: "none",
+            background: inputType === t.id ? "#E8A830" : "#f0f0f0",
+            color: inputType === t.id ? "#fff" : "#666",
+            fontWeight: 600, cursor: "pointer", fontSize: 11,
+          }}>{t.icon} {t.label}</button>
+        ))}
+      </div>
+
+      {inputType === "transcript" && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ padding: 20, border: "2px dashed #7B2FF7", borderRadius: 12, textAlign: "center", marginBottom: 10, background: "#7B2FF705" }}>
+            <div style={{ fontSize: 32, marginBottom: 6 }}>{"\ud83d\udcc4"}</div>
+            <p style={{ fontSize: 12, color: "#666", margin: "0 0 4px" }}>Upload transcriptie (.srt of .vtt)</p>
+            <p style={{ fontSize: 10, color: "#aaa", margin: "0 0 10px" }}>Wordt automatisch geparsed en direct door het panel geanalyseerd</p>
+            <label style={{
+              display: "inline-block", padding: "7px 18px", borderRadius: 8,
+              background: "#7B2FF7", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 11,
+            }}>
+              Kies bestand
+              <input type="file" accept=".srt,.vtt,.txt" style={{ display: "none" }} onChange={e => {
+                const f = e.target.files?.[0];
+                if (f) {
+                  setTranscriptFile(f);
+                  const reader = new FileReader();
+                  reader.onload = (ev) => {
+                    const parsed = parseTranscriptFile(ev.target.result, f.name);
+                    setTranscriptText(parsed);
+                  };
+                  reader.readAsText(f);
+                }
+              }} />
+            </label>
+            {transcriptFile && <p style={{ fontSize: 11, color: "#27ae60", marginTop: 6 }}>{"\u2713"} {transcriptFile.name}</p>}
+          </div>
+          {transcriptText && (
+            <div style={{ marginBottom: 10 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: "#555", display: "block", marginBottom: 3 }}>Transcriptie preview ({transcriptText.length} tekens)</label>
+              <textarea value={transcriptText} onChange={e => setTranscriptText(e.target.value)} style={{
+                width: "100%", minHeight: 100, maxHeight: 200, padding: 8, borderRadius: 8, border: "1.5px solid #7B2FF7", fontSize: 11, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box", background: "#7B2FF705", color: "#333", lineHeight: 1.5,
+              }} />
+              <p style={{ fontSize: 10, color: "#888", margin: "3px 0 0" }}>Je kunt de tekst hier ook handmatig plakken of aanpassen</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {inputType === "audio" && (
+        <div style={{ padding: 20, border: "2px dashed #ddd", borderRadius: 12, textAlign: "center", marginBottom: 12 }}>
+          <div style={{ fontSize: 32, marginBottom: 6 }}>{"\ud83c\udfa7"}</div>
+          <p style={{ fontSize: 12, color: "#666", margin: "0 0 4px" }}>Upload pilot of aflevering</p>
+          <p style={{ fontSize: 10, color: "#aaa", margin: "0 0 10px" }}>Wordt getranscribeerd via Whisper en geanalyseerd door het panel</p>
+          <label style={{
+            display: "inline-block", padding: "7px 18px", borderRadius: 8,
+            background: "#E8A830", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 11,
+          }}>
+            Kies bestand
+            <input type="file" accept="audio/*" style={{ display: "none" }} onChange={e => setAudioFile(e.target.files?.[0] || null)} />
+          </label>
+          {audioFile && <p style={{ fontSize: 11, color: "#27ae60", marginTop: 6 }}>{"\u2713"} {audioFile.name}</p>}
+        </div>
+      )}
+
+      {inputType === "frameio" && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <span style={{ fontSize: 20 }}>{"\ud83c\udfac"}</span>
+            <div>
+              <p style={{ fontSize: 12, fontWeight: 600, color: "#333", margin: 0 }}>Frame.io Integratie</p>
+              <p style={{ fontSize: 10, color: "#888", margin: 0 }}>Plak een Frame.io link of asset ID — transcriptie wordt automatisch opgehaald</p>
+            </div>
+          </div>
+          <input value={omnyUrl} onChange={e => setOmnyUrl(e.target.value)} placeholder="https://app.frame.io/reviews/... of asset ID" style={{
+            width: "100%", padding: 10, borderRadius: 8, border: "1.5px solid #7B2FF7", fontSize: 12, boxSizing: "border-box",
+            background: "#7B2FF705",
+          }} />
+        </div>
+      )}
+
+      <div style={{ display: "grid", gap: 10 }}>
+        {fields.map(f => (
+          <div key={f.key}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#555", display: "block", marginBottom: 3 }}>{f.label}</label>
+            {f.type === "select" ? (
+              <select value={briefing[f.key] || ""} onChange={e => onChange(f.key, e.target.value)} style={{
+                width: "100%", padding: 8, borderRadius: 8, border: "1.5px solid #e0e0e0", fontSize: 12,
+              }}>
+                {f.options.map(o => <option key={o} value={o}>{o || "Selecteer..."}</option>)}
+              </select>
+            ) : f.type === "textarea" ? (
+              <textarea value={briefing[f.key] || ""} onChange={e => onChange(f.key, e.target.value)} placeholder={f.placeholder} style={{
+                width: "100%", minHeight: 60, padding: 8, borderRadius: 8, border: "1.5px solid #e0e0e0", fontSize: 12, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box",
+              }} />
+            ) : f.type === "url" ? (
+              <div style={{ position: "relative" }}>
+                <input value={briefing[f.key] || ""} onChange={e => onChange(f.key, e.target.value)} placeholder={f.placeholder} style={{
+                  width: "100%", padding: "8px 8px 8px 30px", borderRadius: 8, border: "1.5px solid #3498db", fontSize: 12, boxSizing: "border-box", background: "#3498db05",
+                }} />
+                <span style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", fontSize: 14, opacity: 0.5 }}>{"\ud83d\udd17"}</span>
+                {briefing[f.key] && <a href={briefing[f.key]} target="_blank" rel="noopener" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: "#3498db", textDecoration: "none" }}>Open {"\u2197"}</a>}
+              </div>
+            ) : (
+              <input value={briefing[f.key] || ""} onChange={e => onChange(f.key, e.target.value)} placeholder={f.placeholder} style={{
+                width: "100%", padding: 8, borderRadius: 8, border: "1.5px solid #e0e0e0", fontSize: 12, boxSizing: "border-box",
+              }} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <button onClick={onSubmit} disabled={isLoading} style={{
+        marginTop: 14, width: "100%", padding: "11px", borderRadius: 10,
+        background: isLoading ? "#ccc" : "#E8A830", color: "#fff",
+        border: "none", fontWeight: 700, cursor: isLoading ? "default" : "pointer", fontSize: 13,
+      }}>
+        {isLoading ? "\u23f3 Panel analyseert..." : "\ud83d\ude80 Start Panel Analyse"}
+      </button>
+    </div>
+  );
+}
+
+function EvalCard({ evaluation, expanded, onToggle }) {
+  const p = evaluation.persona || {};
+  const b = BRANDS[p.brand] || { color: "#999", emoji: "", name: "?" };
+  const score = evaluation.score;
+
+  return (
+    <div style={{
+      borderLeft: `4px solid ${b.color}`, background: `${b.color}06`,
+      borderRadius: 12, padding: 14, marginBottom: 10, animation: "fadeIn .5s ease",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+        <span style={{ fontSize: 20 }}>{p.avatar}</span>
+        <strong style={{ fontSize: 13 }}>{p.name}</strong>
+        <span style={{ fontSize: 9, background: b.color, color: "#fff", padding: "1px 5px", borderRadius: 4 }}>{b.name}</span>
+        {score && (
+          <span style={{
+            fontSize: 12, fontWeight: 700, marginLeft: "auto",
+            background: score >= 7 ? "#27ae60" : score >= 5 ? "#f39c12" : "#e74c3c",
+            color: "#fff", padding: "2px 8px", borderRadius: 6,
+          }}>{score}/10</span>
+        )}
+      </div>
+      <p style={{ margin: "0 0 6px", fontSize: 12, color: "#333", lineHeight: 1.5 }}>{evaluation.review}</p>
+      {evaluation.tags?.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
+          {evaluation.tags.map((t, i) => (
+            <span key={i} style={{
+              padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 500,
+              background: t.positive ? "#27ae6010" : "#e74c3c10",
+              color: t.positive ? "#27ae60" : "#e74c3c",
+            }}>{t.positive ? "\u2713" : "\u2717"} {t.label}</span>
+          ))}
+        </div>
+      )}
+      <button onClick={onToggle} style={{ background: "none", border: "none", color: b.color, cursor: "pointer", fontSize: 11, fontWeight: 600, padding: 0 }}>
+        {expanded ? "\u25b2 Minder" : "\u25bc Marktanalyse & meer"}
+      </button>
+      {expanded && (
+        <div style={{ marginTop: 8, fontSize: 11, color: "#444", lineHeight: 1.5 }}>
+          {evaluation.market_analysis && <div style={{ marginBottom: 6 }}><strong style={{ color: b.color }}>{"\ud83d\udcca"} Markt:</strong> {evaluation.market_analysis}</div>}
+          {evaluation.competition && <div style={{ marginBottom: 6 }}><strong style={{ color: b.color }}>{"\ud83c\udfaf"} Concurrentie:</strong> {evaluation.competition}</div>}
+          {evaluation.maker_opinion && <div style={{ marginBottom: 6 }}><strong style={{ color: b.color }}>{"\ud83c\udfa4"} Makers:</strong> {evaluation.maker_opinion}</div>}
+          {evaluation.commercial_value && <div><strong style={{ color: b.color }}>{"\ud83d\udcb0"} Commercieel:</strong> {evaluation.commercial_value}</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Dashboard({ result }) {
+  if (!result) return null;
+  const { avg_score, verdict, total_panelists, would_listen, would_share, successful_evaluations } = result;
+  const vc = verdict === "go" ? "#27ae60" : verdict === "tweak" ? "#f39c12" : "#e74c3c";
+  const vl = verdict === "go" ? "GO \ud83d\ude80" : verdict === "tweak" ? "TWEAK \ud83d\udd27" : "STOP \u270b";
+
+  return (
+    <div style={{ background: "#fff", borderRadius: 14, padding: 18, marginBottom: 14 }}>
+      <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>{"\ud83d\udcca"} Panel Verdict</h3>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+        {[
+          { val: avg_score?.toFixed(1), label: "Gem. Score", color: vc },
+          { val: `${would_listen}/${total_panelists}`, label: "Nog luisteren", color: "#3498db" },
+          { val: `${would_share}/${total_panelists}`, label: "Zou delen", color: "#9b59b6" },
+          { val: vl, label: "Advies", color: vc },
+        ].map((m, i) => (
+          <div key={i} style={{ textAlign: "center", padding: 12, background: "#f8f9fa", borderRadius: 10 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: m.color }}>{m.val}</div>
+            <div style={{ fontSize: 10, color: "#888" }}>{m.label}</div>
+          </div>
+        ))}
+      </div>
+      {result.evaluations && (
+        <div style={{ marginTop: 14 }}>
+          {result.evaluations.filter(e => e.score).map((e, i) => {
+            const p = e.persona || {};
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid #f0f0f0" }}>
+                <span style={{ fontSize: 16 }}>{p.avatar}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, width: 90 }}>{p.name?.split(" ")[0]}</span>
+                <div style={{ flex: 1, height: 6, background: "#f0f0f0", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${(e.score || 0) * 10}%`, background: e.score >= 7 ? "#27ae60" : e.score >= 5 ? "#f39c12" : "#e74c3c", borderRadius: 3, transition: "width 1s" }} />
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 700, width: 30, textAlign: "right" }}>{e.score}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChatArea({ sessionId, messages, onSend, isLoading }) {
+  const [input, setInput] = useState("");
+  const endRef = useRef(null);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  const quickQs = [
+    "Wat vinden jullie van de doelgroep?",
+    "Hoe sterk is het format?",
+    "Wie is de concurrent?",
+    "Wat is de commerci\u00eble waarde?",
+    "Hoe belangrijk is video?",
+    "Wat zouden jullie veranderen?",
+    "Past dit bij Podimo exclusive?",
+    "Zou dit op TV kunnen werken?",
+  ];
+
+  const send = () => { if (input.trim()) { onSend(input); setInput(""); } };
+
+  return (
+    <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "10px 14px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: 16 }}>{"\ud83d\udcac"}</span>
+        <strong style={{ fontSize: 13 }}>Chat met het Panel</strong>
+        {sessionId && <span style={{ fontSize: 10, color: "#aaa", marginLeft: "auto" }}>Sessie actief</span>}
+      </div>
+
+      <div style={{ flex: 1, padding: 14, minHeight: 300, maxHeight: 450, overflowY: "auto" }}>
+        {messages.length === 0 && (
+          <div style={{ textAlign: "center", padding: "40px 16px", color: "#ccc" }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>{"\ud83c\udfa4"}</div>
+            <p style={{ fontSize: 12, maxWidth: 300, margin: "0 auto" }}>Voer eerst een concept in en laat het panel analyseren. Daarna kun je hier doorpraten.</p>
+          </div>
+        )}
+        {messages.map((msg, i) => {
+          const isUser = msg.role === "user";
+          const isSystem = msg.role === "system";
+          const b = msg.brand ? BRANDS[msg.brand] : null;
+          if (isSystem) return (
+            <div key={i} style={{ textAlign: "center", padding: "6px 0" }}>
+              <span style={{ fontSize: 11, color: "#999", background: "#f5f5f5", padding: "3px 10px", borderRadius: 6 }}>{msg.content}</span>
+            </div>
+          );
+          return (
+            <div key={i} style={{ display: "flex", gap: 8, marginBottom: 10, flexDirection: isUser ? "row-reverse" : "row", animation: "fadeIn .3s" }}>
+              {!isUser && <div style={{ width: 30, height: 30, borderRadius: "50%", background: b ? `${b.color}20` : "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>{msg.avatar || "\ud83e\udde0"}</div>}
+              <div style={{
+                maxWidth: "72%", padding: "8px 12px", borderRadius: 12,
+                background: isUser ? "#E8A830" : "#f0f2f5",
+                color: isUser ? "#fff" : "#1a1a2e",
+                borderTopRightRadius: isUser ? 4 : 12, borderTopLeftRadius: isUser ? 12 : 4,
+              }}>
+                {!isUser && msg.personaName && <div style={{ fontSize: 10, fontWeight: 700, color: b?.color || "#666", marginBottom: 2 }}>{msg.personaName}</div>}
+                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5 }}>{msg.content}</p>
+              </div>
+            </div>
+          );
+        })}
+        {isLoading && <div style={{ textAlign: "center", padding: 12 }}><span style={{ fontSize: 18, animation: "pulse 1s infinite" }}>{"\ud83d\udcad"}</span></div>}
+        <div ref={endRef} />
+      </div>
+
+      {sessionId && (
+        <>
+          <div style={{ padding: "4px 12px", borderTop: "1px solid #f5f5f5", display: "flex", flexWrap: "wrap", gap: 3 }}>
+            {quickQs.map((q, i) => (
+              <button key={i} onClick={() => { setInput(q); }} style={{
+                padding: "3px 8px", borderRadius: 12, border: "1px solid #E8A83030", background: "#E8A83005",
+                color: "#E8A830", fontSize: 10, cursor: "pointer", fontWeight: 500,
+              }}>{q}</button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 6, padding: "10px 12px", borderTop: "1px solid #f0f0f0" }}>
+            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
+              placeholder="Stel een vraag aan het panel..." style={{ flex: 1, padding: "9px 12px", borderRadius: 8, border: "1.5px solid #e0e0e0", fontSize: 12 }} />
+            <button onClick={send} disabled={!input.trim() || isLoading} style={{
+              padding: "9px 18px", borderRadius: 8, border: "none",
+              background: input.trim() && !isLoading ? "#E8A830" : "#ccc",
+              color: "#fff", fontWeight: 700, cursor: input.trim() && !isLoading ? "pointer" : "default", fontSize: 12,
+            }}>Verstuur</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ============================================
+// Main App
+// ============================================
+function PanelApp() {
+  const [tab, setTab] = useState("test");
+  const [pipelineStep, setPipelineStep] = useState(0);
+  const [personas, setPersonas] = useState([]);
+  const [selectedPersonas, setSelectedPersonas] = useState([]);
+  const [briefing, setBriefing] = useState({});
+  const [inputType, setInputType] = useState("concept");
+  const [audioFile, setAudioFile] = useState(null);
+  const [omnyUrl, setOmnyUrl] = useState("");
+  const [transcriptFile, setTranscriptFile] = useState(null);
+  const [transcriptText, setTranscriptText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [expandedEvals, setExpandedEvals] = useState({});
+  const [error, setError] = useState(null);
+  const [sessions, setSessions] = useState([]);
+
+  useEffect(() => {
+    // Load personas (with fallback to embedded data)
+    fetch(`${SUPABASE_URL}/rest/v1/personas?select=*&is_active=eq.true`, {
+      headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "Accept-Profile": "panel" },
+    }).then(r => r.json()).then(data => {
+      if (Array.isArray(data) && data.length > 0) { setPersonas(data); setSelectedPersonas(data.map(p => p.id)); }
+      else { setPersonas(FALLBACK_PERSONAS); setSelectedPersonas(FALLBACK_PERSONAS.map(p => p.id)); }
+    }).catch(() => {
+      // Fallback: use embedded personas
+      setPersonas(FALLBACK_PERSONAS);
+      setSelectedPersonas(FALLBACK_PERSONAS.map(p => p.id));
+    });
+
+    // Load recent sessions
+    fetch(`${SUPABASE_URL}/rest/v1/sessions?select=*&order=created_at.desc&limit=10`, {
+      headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}`, "Accept-Profile": "panel" },
+    }).then(r => r.json()).then(data => { if (Array.isArray(data)) setSessions(data); }).catch(() => {});
+  }, []);
+
+  const togglePersona = (id) => setSelectedPersonas(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+  const startAnalysis = async () => {
+    setIsLoading(true); setError(null); setResult(null); setMessages([]); setPipelineStep(1);
+    try {
+      let transcription = null;
+      if (inputType === "transcript" && transcriptText) {
+        setMessages([{ role: "system", content: `\ud83d\udcc4 Transcriptie geladen vanuit ${transcriptFile?.name || 'tekst'} (${transcriptText.length} tekens)` }]);
+        transcription = transcriptText;
+      } else if (inputType === "frameio" && omnyUrl) {
+        setMessages([{ role: "system", content: `\ud83c\udfac Frame.io asset ophalen...` }]);
+        const fioResult = await fetchFrameIO(omnyUrl);
+        if (fioResult.error) throw new Error(`Frame.io fout: ${fioResult.error}`);
+        if (fioResult.has_transcription && fioResult.transcription) {
+          transcription = fioResult.transcription;
+          setMessages(prev => [...prev, { role: "system", content: `\u2705 Transcriptie opgehaald uit Frame.io: "${fioResult.asset?.name}" (${Math.round(fioResult.asset?.duration || 0)}s)` }]);
+        } else if (fioResult.asset?.download_url) {
+          // No transcription in Frame.io, fall back to Whisper
+          setMessages(prev => [...prev, { role: "system", content: `\ud83c\udfa4 Geen transcriptie in Frame.io, audio transcriberen via Whisper...` }]);
+          const txResult = await callEdgeFunction("panel-transcribe", { audio_url: fioResult.asset.download_url });
+          if (txResult.error) throw new Error(`Whisper transcriptie mislukt: ${txResult.error}`);
+          transcription = txResult.text;
+          setMessages(prev => [...prev, { role: "system", content: `\u2705 Whisper transcriptie voltooid (${Math.round(txResult.duration || 0)}s)` }]);
+        } else {
+          setMessages(prev => [...prev, { role: "system", content: `\u26a0\ufe0f Asset gevonden maar geen transcriptie of download beschikbaar. Analyse gaat door op basis van concept-info.` }]);
+        }
+      } else if (inputType === "audio" && audioFile) {
+        setMessages([{ role: "system", content: `\ud83c\udfa4 Transcriberen van "${audioFile.name}"...` }]);
+        const txResult = await transcribeAudio(audioFile);
+        if (txResult.error) throw new Error(`Transcriptie mislukt: ${txResult.error}`);
+        transcription = txResult.text;
+        setMessages(prev => [...prev, { role: "system", content: `\u2705 Transcriptie voltooid (${Math.round(txResult.duration || 0)}s audio)` }]);
+      }
+
+      setPipelineStep(2);
+      setMessages(prev => [...prev, { role: "system", content: "\ud83e\udde0 Panel analyseert het concept..." }]);
+      const concept = { ...briefing };
+      if (concept.doc_url) {
+        concept.references = (concept.references || '') + '\nBijlage: ' + concept.doc_url;
+      }
+      if (transcription) concept.transcription = transcription;
+
+      const analysisResult = await callEdgeFunction("panel-analyze", {
+        concept,
+        persona_ids: selectedPersonas.length < personas.length ? selectedPersonas : undefined,
+      });
+      if (analysisResult.error) throw new Error(analysisResult.error);
+
+      setPipelineStep(3); setResult(analysisResult); setSessionId(analysisResult.session_id);
+
+      const newMessages = [
+        { role: "system", content: `\u2705 Panel analyse voltooid \u2014 ${analysisResult.verdict?.toUpperCase()} (${analysisResult.avg_score?.toFixed(1)}/10)` },
+      ];
+      analysisResult.evaluations?.forEach(e => {
+        const p = e.persona || {};
+        if (e.review && !e.review.startsWith("Anthropic API error")) {
+          newMessages.push({ role: "persona", personaName: p.name, avatar: p.avatar, brand: p.brand, content: e.review });
+        }
+      });
+      newMessages.push({ role: "system", content: "\ud83d\udcac Stel nu vragen aan het panel!" });
+      setMessages(prev => [...prev, ...newMessages]);
+    } catch (err) {
+      setError(err.message);
+      setMessages(prev => [...prev, { role: "system", content: `\u274c Fout: ${err.message}` }]);
+    } finally { setIsLoading(false); }
+  };
+
+  const sendChat = async (msg) => {
+    if (!sessionId) return;
+    setMessages(prev => [...prev, { role: "user", content: msg }]);
+    setIsChatLoading(true);
+    try {
+      const chatResult = await callEdgeFunction("panel-chat", { session_id: sessionId, message: msg });
+      if (chatResult.error) throw new Error(chatResult.error);
+      const newMsgs = chatResult.responses?.map(r => ({
+        role: "persona", personaName: r.persona_name, brand: r.persona_brand,
+        avatar: personas.find(p => p.id === r.persona_id)?.avatar || "\ud83e\udde0",
+        content: r.content,
+      })) || [];
+      setMessages(prev => [...prev, ...newMsgs]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: "system", content: `\u274c ${err.message}` }]);
+    } finally { setIsChatLoading(false); }
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f5f5f7", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      <div style={{ background: "linear-gradient(135deg,#1a1045,#2d1b69)", padding: "14px 24px", color: "#fff" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>{"\ud83e\udd5c"} Synthetisch Doelgroep Panel</h1>
+            <p style={{ margin: "1px 0 0", fontSize: 10, opacity: .5 }}>Tonny {"\u00b7"} Podimo {"\u00b7"} Dag & Nacht {"\u2014"} Powered by Claude + Whisper + Supabase</p>
+          </div>
+          <div style={{ display: "flex", gap: 3 }}>
+            {[{ id: "test", l: "\ud83c\udfa4 Test" }, { id: "history", l: "\ud83d\udcda Sessies" }].map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{
+                padding: "6px 12px", borderRadius: 8, border: "none",
+                background: tab === t.id ? "#E8A830" : "rgba(255,255,255,.1)",
+                color: tab === t.id ? "#1a1045" : "#fff", fontWeight: 600, cursor: "pointer", fontSize: 11,
+              }}>{t.l}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "14px 24px" }}>
+        {tab === "test" && (
+          <>
+            <Pipeline step={pipelineStep} />
+            {error && (
+              <div style={{ background: "#fee", border: "1px solid #fcc", borderRadius: 10, padding: 12, marginBottom: 14, fontSize: 12, color: "#c33" }}>
+                <strong>Fout:</strong> {error}
+              </div>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 14 }}>
+              <div style={{ maxHeight: "calc(100vh - 160px)", overflowY: "auto" }}>
+                <PersonaGrid personas={personas} selected={selectedPersonas} onToggle={togglePersona} />
+                <BriefingForm briefing={briefing} onChange={(k, v) => setBriefing(prev => ({ ...prev, [k]: v }))}
+                  onSubmit={startAnalysis} inputType={inputType} setInputType={setInputType}
+                  audioFile={audioFile} setAudioFile={setAudioFile} omnyUrl={omnyUrl} setOmnyUrl={setOmnyUrl}
+                  transcriptFile={transcriptFile} setTranscriptFile={setTranscriptFile}
+                  transcriptText={transcriptText} setTranscriptText={setTranscriptText} isLoading={isLoading} />
+              </div>
+              <div>
+                <Dashboard result={result} />
+                {result?.evaluations && (
+                  <div style={{ background: "#fff", borderRadius: 14, padding: 16, marginBottom: 14 }}>
+                    <h3 style={{ margin: "0 0 10px", fontSize: 14 }}>{"\ud83d\udde3\ufe0f"} Individuele Evaluaties</h3>
+                    {result.evaluations.filter(e => e.score).map((e, i) => (
+                      <EvalCard key={i} evaluation={e} expanded={expandedEvals[i]} onToggle={() => setExpandedEvals(prev => ({ ...prev, [i]: !prev[i] }))} />
+                    ))}
+                  </div>
+                )}
+                <ChatArea sessionId={sessionId} messages={messages} onSend={sendChat} isLoading={isChatLoading} />
+              </div>
+            </div>
+          </>
+        )}
+
+        {tab === "history" && (
+          <div style={{ background: "#fff", borderRadius: 14, padding: 20 }}>
+            <h2 style={{ margin: "0 0 14px", fontSize: 18 }}>{"\ud83d\udcda"} Eerdere Sessies</h2>
+            {sessions.length === 0 && <p style={{ color: "#999", fontSize: 13 }}>Nog geen sessies. Start je eerste panel test!</p>}
+            {sessions.map((s, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderBottom: "1px solid #f0f0f0" }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10,
+                  background: s.panel_verdict === "go" ? "#27ae6015" : s.panel_verdict === "tweak" ? "#f39c1215" : "#e74c3c15",
+                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18,
+                }}>
+                  {s.panel_verdict === "go" ? "\ud83d\ude80" : s.panel_verdict === "tweak" ? "\ud83d\udd27" : s.panel_verdict === "stop" ? "\u270b" : "\u23f3"}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{s.title || "Untitled"}</div>
+                  <div style={{ fontSize: 11, color: "#888" }}>
+                    {new Date(s.created_at).toLocaleDateString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    {s.target_brand && ` \u00b7 ${s.target_brand}`}
+                    {s.input_type && ` \u00b7 ${s.input_type}`}
+                  </div>
+                </div>
+                {s.avg_score > 0 && (
+                  <div style={{
+                    fontSize: 18, fontWeight: 800,
+                    color: s.avg_score >= 7 ? "#27ae60" : s.avg_score >= 5 ? "#f39c12" : "#e74c3c",
+                  }}>{Number(s.avg_score).toFixed(1)}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<PanelApp />, document.getElementById("root"));
 </script>
 </body>
 </html>
