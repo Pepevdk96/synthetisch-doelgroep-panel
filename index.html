@@ -34,15 +34,15 @@ const BRANDS = {
 
 // Embedded personas as fallback (when REST API fails due to CORS/file://)
 const FALLBACK_PERSONAS = [
-  { id: "30a34307-fac9-4a77-bb42-8898db61308b", name: "Daan Bakker", brand: "tonny", age: 31, avatar: "\ud83d\udc68\u200d\ud83d\udcbc", occupation: "Account manager", is_active: true },
-  { id: "94cf8f03-4570-4ac1-8991-cdb8ce5c3619", name: "Sophie van Dijk", brand: "tonny", age: 24, avatar: "\ud83d\udc69\u200d\ud83e\uddb0", occupation: "Social media manager", is_active: true },
-  { id: "e6f3be8f-cdca-4a7a-a4db-b18b43b746ca", name: "Yasmine El Ouardi", brand: "tonny", age: 19, avatar: "\ud83d\udc69\u200d\ud83c\udf93", occupation: "Student Psychologie", is_active: true },
-  { id: "ebb8be2c-ef90-4104-adcb-e9b14f3842d4", name: "Martijn de Vries", brand: "podimo", age: 38, avatar: "\ud83e\uddd4", occupation: "Beleidsadviseur", is_active: true },
-  { id: "b86a7818-2dcd-47dc-a07c-177d97b09504", name: "Linda Jansen", brand: "podimo", age: 45, avatar: "\ud83d\udc69\u200d\ud83d\udcbb", occupation: "HR-directeur", is_active: true },
-  { id: "68d14288-52cb-4b5b-92ea-b82acd91e41d", name: "Thomas Hendriks", brand: "podimo", age: 28, avatar: "\ud83d\udc68\u200d\ud83c\udfa4", occupation: "UX Designer", is_active: true },
-  { id: "620026d8-253c-41aa-a351-c25366bb418c", name: "Fleur Visser", brand: "dagnacht", age: 22, avatar: "\ud83d\udc83", occupation: "Influencer", is_active: true },
-  { id: "debce9d3-feed-4fb8-a3ae-e8273fb2e6a8", name: "Rick van den Berg", brand: "dagnacht", age: 26, avatar: "\ud83e\uddd1\u200d\ud83c\udf73", occupation: "Horeca-ondernemer", is_active: true },
-  { id: "882e7945-0b79-4f05-8957-783aeda50f29", name: "Noor de Groot", brand: "dagnacht", age: 30, avatar: "\ud83d\udc69\u200d\u2695\ufe0f", occupation: "Huisarts in opleiding", is_active: true },
+  { id: "30a34307-fac9-4a77-bb42-8898db61308b", name: "Daan Bakker", brand: "tonny", age: 31, avatar: "\ud83d\udc68\u200d\ud83d\udcbc", occupation: "Account manager", location: "Utrecht", gender: "man", is_randstad: true, age_bracket: "25-34", education_level: "WO", income_bracket: "25-50k", is_active: true },
+  { id: "94cf8f03-4570-4ac1-8991-cdb8ce5c3619", name: "Sophie van Dijk", brand: "tonny", age: 24, avatar: "\ud83d\udc69\u200d\ud83e\uddb0", occupation: "Social media manager", location: "Amsterdam", gender: "vrouw", is_randstad: true, age_bracket: "18-24", education_level: "HBO", income_bracket: "25-50k", is_active: true },
+  { id: "e6f3be8f-cdca-4a7a-a4db-b18b43b746ca", name: "Yasmine El Ouardi", brand: "tonny", age: 19, avatar: "\ud83d\udc69\u200d\ud83c\udf93", occupation: "Student Psychologie", location: "Rotterdam", gender: "vrouw", is_randstad: true, age_bracket: "18-24", education_level: "WO", income_bracket: "<25k", is_active: true },
+  { id: "ebb8be2c-ef90-4104-adcb-e9b14f3842d4", name: "Martijn de Vries", brand: "podimo", age: 38, avatar: "\ud83e\uddd4", occupation: "Beleidsadviseur", location: "Den Haag", gender: "man", is_randstad: true, age_bracket: "35-44", education_level: "WO", income_bracket: "50-75k", is_active: true },
+  { id: "b86a7818-2dcd-47dc-a07c-177d97b09504", name: "Linda Jansen", brand: "podimo", age: 45, avatar: "\ud83d\udc69\u200d\ud83d\udcbb", occupation: "HR-directeur", location: "Haarlem", gender: "vrouw", is_randstad: true, age_bracket: "45-54", education_level: "WO", income_bracket: "75k+", is_active: true },
+  { id: "68d14288-52cb-4b5b-92ea-b82acd91e41d", name: "Thomas Hendriks", brand: "podimo", age: 28, avatar: "\ud83d\udc68\u200d\ud83c\udfa4", occupation: "UX Designer", location: "Eindhoven", gender: "man", is_randstad: false, age_bracket: "25-34", education_level: "HBO", income_bracket: "25-50k", is_active: true },
+  { id: "620026d8-253c-41aa-a351-c25366bb418c", name: "Fleur Visser", brand: "dagnacht", age: 22, avatar: "\ud83d\udc83", occupation: "Influencer", location: "Amsterdam", gender: "vrouw", is_randstad: true, age_bracket: "18-24", education_level: "MBO", income_bracket: "25-50k", is_active: true },
+  { id: "debce9d3-feed-4fb8-a3ae-e8273fb2e6a8", name: "Rick van den Berg", brand: "dagnacht", age: 26, avatar: "\ud83e\uddd1\u200d\ud83c\udf73", occupation: "Horeca-ondernemer", location: "Breda", gender: "man", is_randstad: false, age_bracket: "25-34", education_level: "MBO", income_bracket: "25-50k", is_active: true },
+  { id: "882e7945-0b79-4f05-8957-783aeda50f29", name: "Noor de Groot", brand: "dagnacht", age: 30, avatar: "\ud83d\udc69\u200d\u2695\ufe0f", occupation: "Huisarts in opleiding", location: "Groningen", gender: "vrouw", is_randstad: false, age_bracket: "25-34", education_level: "WO", income_bracket: "50-75k", is_active: true },
 ];
 
 // API helpers
@@ -111,7 +111,7 @@ function Pipeline({ step }) {
   );
 }
 
-function PersonaGrid({ personas, selected, onToggle }) {
+function PersonaGrid({ personas, selected, onToggle, crossBrand, setCrossBrand }) {
   return (
     <div style={{ background: "#fff", borderRadius: 14, padding: 14, marginBottom: 12 }}>
       <h4 style={{ margin: "0 0 8px", fontSize: 13 }}>Panel ({selected.length}/{personas.length})</h4>
@@ -134,6 +134,23 @@ function PersonaGrid({ personas, selected, onToggle }) {
           );
         })}
       </div>
+      {setCrossBrand && (
+        <label style={{
+          display: "flex", alignItems: "center", gap: 6, marginTop: 10, padding: "7px 9px",
+          background: crossBrand ? "#E8A83012" : "#f8f9fa", border: `1px solid ${crossBrand ? "#E8A83040" : "#eee"}`,
+          borderRadius: 8, cursor: "pointer", fontSize: 10, color: "#333",
+        }}>
+          <input type="checkbox" checked={crossBrand} onChange={e => setCrossBrand(e.target.checked)} style={{ cursor: "pointer" }} />
+          <div>
+            <div style={{ fontWeight: 700 }}>{"\ud83d\udd01"} Cross-brand testen</div>
+            <div style={{ fontSize: 9, color: "#888", lineHeight: 1.3 }}>
+              {crossBrand
+                ? "Alle 9 personas horen het concept, ongeacht het doelmerk."
+                : "Standaard luisteren alleen personas van het doelmerk mee."}
+            </div>
+          </div>
+        </label>
+      )}
     </div>
   );
 }
@@ -322,10 +339,15 @@ function EvalCard({ evaluation, expanded, onToggle }) {
       borderLeft: `4px solid ${b.color}`, background: `${b.color}06`,
       borderRadius: 12, padding: 14, marginBottom: 10, animation: "fadeIn .5s ease",
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
         <span style={{ fontSize: 20 }}>{p.avatar}</span>
         <strong style={{ fontSize: 13 }}>{p.name}</strong>
         <span style={{ fontSize: 9, background: b.color, color: "#fff", padding: "1px 5px", borderRadius: 4 }}>{b.name}</span>
+        {(p.age_bracket || p.gender || p.location) && (
+          <span style={{ fontSize: 9, color: "#888", background: "#f0f0f0", padding: "1px 6px", borderRadius: 4 }}>
+            {[p.gender, p.age_bracket, p.location, p.education_level].filter(Boolean).join(" \u00b7 ")}
+          </span>
+        )}
         {score && (
           <span style={{
             fontSize: 12, fontWeight: 700, marginLeft: "auto",
@@ -400,6 +422,120 @@ function Dashboard({ result }) {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+function SegmentBar({ label, value, count, max = 10, color = "#E8A830" }) {
+  const hasValue = value !== null && value !== undefined;
+  const pct = hasValue ? (value / max) * 100 : 0;
+  const barColor = !hasValue ? "#e0e0e0" : value >= 7 ? "#27ae60" : value >= 5 ? "#f39c12" : "#e74c3c";
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 0" }}>
+      <span style={{ fontSize: 10, fontWeight: 600, width: 110, color: hasValue ? "#333" : "#aaa" }}>
+        {label}{count != null && <span style={{ color: "#aaa", fontWeight: 400 }}> ({count})</span>}
+      </span>
+      <div style={{ flex: 1, height: 8, background: "#f0f0f0", borderRadius: 4, overflow: "hidden" }}>
+        {hasValue && <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 4, transition: "width .8s" }} />}
+      </div>
+      <span style={{ fontSize: 11, fontWeight: 700, width: 32, textAlign: "right", color: hasValue ? "#333" : "#ccc" }}>
+        {hasValue ? value.toFixed(1) : "\u2014"}
+      </span>
+    </div>
+  );
+}
+
+function SegmentationReport({ result }) {
+  if (!result?.evaluations || !result?.segments) return null;
+  const evals = result.evaluations.filter(e => e.score);
+
+  // Count personas per segment
+  const count = (fn) => evals.filter(e => fn(e.persona || {})).length;
+
+  const s = result.segments;
+
+  // Only show groups that have at least one persona
+  const genderRows = [
+    { label: "Man", value: s.by_gender?.man, count: count(p => p.gender === "man") },
+    { label: "Vrouw", value: s.by_gender?.vrouw, count: count(p => p.gender === "vrouw") },
+    { label: "Non-binair", value: s.by_gender?.["non-binair"], count: count(p => p.gender === "non-binair") },
+  ].filter(r => r.count > 0);
+
+  const regionRows = [
+    { label: "Randstad", value: s.by_region?.randstad, count: count(p => p.is_randstad === true) },
+    { label: "Buiten Randstad", value: s.by_region?.buiten_randstad, count: count(p => p.is_randstad === false) },
+  ].filter(r => r.count > 0);
+
+  const ageRows = [
+    { label: "18\u201324", value: s.by_age?.["18-24"], count: count(p => p.age_bracket === "18-24") },
+    { label: "25\u201334", value: s.by_age?.["25-34"], count: count(p => p.age_bracket === "25-34") },
+    { label: "35\u201344", value: s.by_age?.["35-44"], count: count(p => p.age_bracket === "35-44") },
+    { label: "45\u201354", value: s.by_age?.["45-54"], count: count(p => p.age_bracket === "45-54") },
+    { label: "55\u201364", value: s.by_age?.["55-64"], count: count(p => p.age_bracket === "55-64") },
+    { label: "65+", value: s.by_age?.["65+"], count: count(p => p.age_bracket === "65+") },
+  ].filter(r => r.count > 0);
+
+  const eduRows = [
+    { label: "WO", value: s.by_education?.WO, count: count(p => p.education_level === "WO") },
+    { label: "HBO", value: s.by_education?.HBO, count: count(p => p.education_level === "HBO") },
+    { label: "MBO", value: s.by_education?.MBO, count: count(p => p.education_level === "MBO") },
+    { label: "VMBO", value: s.by_education?.VMBO, count: count(p => p.education_level === "VMBO") },
+  ].filter(r => r.count > 0);
+
+  const brandRows = [
+    { label: "Tonny", value: s.by_brand?.tonny, count: count(p => p.brand === "tonny") },
+    { label: "Podimo", value: s.by_brand?.podimo, count: count(p => p.brand === "podimo") },
+    { label: "Dag & Nacht", value: s.by_brand?.dagnacht, count: count(p => p.brand === "dagnacht") },
+  ].filter(r => r.count > 0);
+
+  const Section = ({ title, icon, rows }) => rows.length === 0 ? null : (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#1a1045", marginBottom: 4 }}>{icon} {title}</div>
+      {rows.map((r, i) => <SegmentBar key={i} label={r.label} value={r.value} count={r.count} />)}
+    </div>
+  );
+
+  // Find biggest gap to surface as insight
+  const allRows = [
+    ...genderRows.map(r => ({ ...r, group: "geslacht" })),
+    ...regionRows.map(r => ({ ...r, group: "regio" })),
+    ...ageRows.map(r => ({ ...r, group: "leeftijd" })),
+    ...eduRows.map(r => ({ ...r, group: "opleiding" })),
+  ].filter(r => r.value != null);
+
+  let insight = null;
+  if (allRows.length >= 2) {
+    const sorted = [...allRows].sort((a, b) => b.value - a.value);
+    const top = sorted[0];
+    const bot = sorted[sorted.length - 1];
+    const gap = top.value - bot.value;
+    if (gap >= 1.5) {
+      insight = `Grootste verschil: ${top.label} scoort ${top.value.toFixed(1)} vs ${bot.label} ${bot.value.toFixed(1)} (\u0394 ${gap.toFixed(1)}). Dit format resoneert sterker bij ${top.label.toLowerCase()} dan bij ${bot.label.toLowerCase()}.`;
+    }
+  }
+
+  return (
+    <div style={{ background: "#fff", borderRadius: 14, padding: 16, marginBottom: 14 }}>
+      <h3 style={{ margin: "0 0 10px", fontSize: 14 }}>{"\ud83d\udccd"} Demografische Doorsnede</h3>
+      {insight && (
+        <div style={{ background: "#E8A83010", border: "1px solid #E8A83030", borderRadius: 8, padding: "8px 10px", marginBottom: 12, fontSize: 11, color: "#333", lineHeight: 1.4 }}>
+          <strong style={{ color: "#E8A830" }}>{"\ud83d\udca1"} Insight:</strong> {insight}
+        </div>
+      )}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div>
+          <Section title="Geslacht" icon="\ud83d\udc64" rows={genderRows} />
+          <Section title="Regio" icon="\ud83d\uddfa\ufe0f" rows={regionRows} />
+          <Section title="Merk-affiniteit" icon="\ud83c\udff7\ufe0f" rows={brandRows} />
+        </div>
+        <div>
+          <Section title="Leeftijd" icon="\ud83c\udf82" rows={ageRows} />
+          <Section title="Opleiding" icon="\ud83c\udf93" rows={eduRows} />
+        </div>
+      </div>
+      <p style={{ fontSize: 10, color: "#aaa", margin: "8px 0 0", fontStyle: "italic" }}>
+        Gemiddelde scores per demografisch segment. Getallen tussen haakjes = aantal personas in dat segment.
+      </p>
     </div>
   );
 }
@@ -513,6 +649,7 @@ function PanelApp() {
   const [expandedEvals, setExpandedEvals] = useState({});
   const [error, setError] = useState(null);
   const [sessions, setSessions] = useState([]);
+  const [crossBrand, setCrossBrand] = useState(false);
 
   useEffect(() => {
     // Load personas (with fallback to embedded data)
@@ -578,6 +715,7 @@ function PanelApp() {
       const analysisResult = await callEdgeFunction("panel-analyze", {
         concept,
         persona_ids: selectedPersonas.length < personas.length ? selectedPersonas : undefined,
+        cross_brand: crossBrand,
       });
       if (analysisResult.error) throw new Error(analysisResult.error);
 
@@ -649,7 +787,7 @@ function PanelApp() {
             )}
             <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 14 }}>
               <div style={{ maxHeight: "calc(100vh - 160px)", overflowY: "auto" }}>
-                <PersonaGrid personas={personas} selected={selectedPersonas} onToggle={togglePersona} />
+                <PersonaGrid personas={personas} selected={selectedPersonas} onToggle={togglePersona} crossBrand={crossBrand} setCrossBrand={setCrossBrand} />
                 <BriefingForm briefing={briefing} onChange={(k, v) => setBriefing(prev => ({ ...prev, [k]: v }))}
                   onSubmit={startAnalysis} inputType={inputType} setInputType={setInputType}
                   audioFile={audioFile} setAudioFile={setAudioFile} omnyUrl={omnyUrl} setOmnyUrl={setOmnyUrl}
@@ -658,6 +796,7 @@ function PanelApp() {
               </div>
               <div>
                 <Dashboard result={result} />
+                <SegmentationReport result={result} />
                 {result?.evaluations && (
                   <div style={{ background: "#fff", borderRadius: 14, padding: 16, marginBottom: 14 }}>
                     <h3 style={{ margin: "0 0 10px", fontSize: 14 }}>{"\ud83d\udde3\ufe0f"} Individuele Evaluaties</h3>
